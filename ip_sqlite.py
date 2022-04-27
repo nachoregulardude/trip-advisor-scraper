@@ -85,7 +85,6 @@ def get_all_links_names(url):
 
 
 def next_page(soup):
-    
     next_page = soup.find('a', {'class':'dfuux u j z _F ddFHE bVTsJ emPJr', 'data-smoke-attr':'pagination-next-arrow'})
     return next_page['href'] if next_page else False
     
@@ -104,26 +103,5 @@ def main():
 
 if __name__=='__main__':
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
