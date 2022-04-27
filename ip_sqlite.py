@@ -35,13 +35,16 @@ Getting to Scrape crawl link:
     Name this python file as initial_populate.py
     An additional challenge for this is to do this part via multi processing.
 '''
-#url = 'https://www.tripadvisor.com/'
+
+
 
 def get_soup(url):
     headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'}
     s = requests.Session()
     r = s.get(url, headers=headers)
     return  BeautifulSoup(r.text, 'lxml')
+
+
 
 def scrape_one_day_trips(url, base_url):
     soup = get_soup(url)
@@ -63,6 +66,8 @@ def scrape_one_day_trips(url, base_url):
         
     return result
 
+
+
 def get_all_links_names(url, base_url):
     results = list()
     print(f'going to first page...: {url}')
@@ -77,23 +82,28 @@ def get_all_links_names(url, base_url):
     return all_results
 
 
+
 def next_page(url):
     soup = get_soup(url)
     next_page = soup.find('a', {'class':'dfuux u j z _F ddFHE bVTsJ emPJr', 'data-smoke-attr':'pagination-next-arrow'})
     return next_page['href'] if next_page else False
     
 
-url = 'https://www.tripadvisor.com/Attraction_Products-g297628-t11889-zfg11867-Bengaluru_Bangalore_District_Karnataka.html'
-base_url = 'https://www.tripadvisor.com'
-results = get_all_links_names(url, base_url)
-#hsh = [hashlib.md5(f"{ele['trip_name']}{ele['trip_link']}".encode()).hexdigest() for ele in results]
-city_name = 'Bangalore'
-filename = f'ingestion_trip_advisior_{city_name}_things_to_do.csv'
-dataframe = pandas.DataFrame(results)
-dataframe.to_csv(filename, index=False)
-print(f'Entire Data: \n{results}')
-print(f'Got {len(results)} results')
-print(f'Results saved to {filename}')
+
+def main():
+    url = 'https://www.tripadvisor.com/Attraction_Products-g297628-t11889-zfg11867-Bengaluru_Bangalore_District_Karnataka.html'
+    base_url = 'https://www.tripadvisor.com'
+    city_name = 'Bangalore'
+    filename = f'ingestion_trip_advisior_{city_name}_things_to_do.csv'
+    results = get_all_links_names(url, base_url)
+    dataframe = pandas.DataFrame(results)
+    dataframe.to_csv(filename, index=False)
+    print(f'Entire Data: \n{results}')
+    print(f'Got {len(results)} results')
+    print(f'Results saved to {filename}')
+
+if __name__=='__main__':
+    main()
 
 
 
