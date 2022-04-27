@@ -51,10 +51,13 @@ def scrape_one_day_trips(url, base_url):
     result = list()
     for div_name, div_link in zip(div_names, div_links):
         link = div_link.find('a')['href']
-        name = div_name.text
+        div_name.span.decompose()
+        name = div_name.text.strip()
         fields = {
                 'trip_name': name,
-                'trip_link': f'{base_url}{link}'
+                'trip_link': f'{base_url}{link}',
+                'status': 'PENDING',
+                'hsh': hashlib.md5(f'{name}{base_url}{link}'.encode()).hexdigest()
                 }
         result.append(fields)
         
@@ -73,28 +76,23 @@ def get_all_links_names(url, base_url):
     all_results = list(itertools.chain.from_iterable(results))
     return all_results
 
+
 def next_page(url):
     soup = get_soup(url)
     next_page = soup.find('a', {'class':'dfuux u j z _F ddFHE bVTsJ emPJr', 'data-smoke-attr':'pagination-next-arrow'})
-    if next_page:
-        return next_page['href']
-    else:
-        return False
+    return next_page['href'] if next_page else False
     
 
 url = 'https://www.tripadvisor.com/Attraction_Products-g297628-t11889-zfg11867-Bengaluru_Bangalore_District_Karnataka.html'
 base_url = 'https://www.tripadvisor.com'
 results = get_all_links_names(url, base_url)
-#hsh = [hashlib.md5(f'{v}{v1}'.encode()).hexdigest() for (k,v), (k1, v1) in zip(names, links)]
-hsh = [hashlib.md5(f"{ele['trip_name']}{ele['trip_link']}".encode()).hexdigest() for ele in results]
-status = 'PENDING'
+#hsh = [hashlib.md5(f"{ele['trip_name']}{ele['trip_link']}".encode()).hexdigest() for ele in results]
 city_name = 'Bangalore'
 filename = f'ingestion_trip_advisior_{city_name}_things_to_do.csv'
 dataframe = pandas.DataFrame(results)
 dataframe.to_csv(filename, index=False)
-print(f'Data: \n{results}')
-print(f'Hash result: \n{hsh}')
-print(f'Got len(results) results')
+print(f'Entire Data: \n{results}')
+print(f'Got {len(results)} results')
 print(f'Results saved to {filename}')
 
 
