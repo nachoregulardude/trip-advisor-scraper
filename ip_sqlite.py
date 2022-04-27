@@ -60,14 +60,6 @@ def scrape_one_day_trips(url, base_url):
         
     return result
 
-def next_page(url):
-    soup = get_soup(url)
-    next_page = soup.find('a', {'class':'dfuux u j z _F ddFHE bVTsJ emPJr', 'data-smoke-attr':'pagination-next-arrow'})
-    if next_page:
-        return next_page['href']
-    else:
-        return False
-    
 def get_all_links_names(url, base_url):
     results = list()
     print(f'going to first page...: {url}')
@@ -81,6 +73,15 @@ def get_all_links_names(url, base_url):
     all_results = list(itertools.chain.from_iterable(results))
     return all_results
 
+def next_page(url):
+    soup = get_soup(url)
+    next_page = soup.find('a', {'class':'dfuux u j z _F ddFHE bVTsJ emPJr', 'data-smoke-attr':'pagination-next-arrow'})
+    if next_page:
+        return next_page['href']
+    else:
+        return False
+    
+
 url = 'https://www.tripadvisor.com/Attraction_Products-g297628-t11889-zfg11867-Bengaluru_Bangalore_District_Karnataka.html'
 base_url = 'https://www.tripadvisor.com'
 results = get_all_links_names(url, base_url)
@@ -88,13 +89,15 @@ results = get_all_links_names(url, base_url)
 hsh = [hashlib.md5(f"{ele['trip_name']}{ele['trip_link']}".encode()).hexdigest() for ele in results]
 status = 'PENDING'
 city_name = 'Bangalore'
-filename = f'ingestion_trip_advisior_{city_name}_things_to_do.db'
+filename = f'ingestion_trip_advisior_{city_name}_things_to_do.csv'
+dataframe = pandas.DataFrame(results)
+dataframe.to_csv(filename, index=False)
+print(f'Data: \n{results}')
+print(f'Hash result: \n{hsh}')
+print(f'Got len(results) results')
+print(f'Results saved to {filename}')
 
 
-
-print(results)
-print(hsh, 'this is hash')
-print(len(results))
 
 
 
