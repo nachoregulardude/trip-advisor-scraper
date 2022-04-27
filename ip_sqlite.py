@@ -1,11 +1,13 @@
-from bs4 import BeautifulSoup
 import hashlib
-import itertools
-import requests
+
 #import sqlite3
 import pandas
+from bs4 import BeautifulSoup
+import requests
 
+# pass soup instead of url
 
+BASE_URL = 'https://www.tripadvisor.com'
 '''
 Assignment 2:
 Base link: https://www.tripadvisor.com/
@@ -46,9 +48,7 @@ def get_soup(url):
 
 
 
-def scrape_one_day_trips(url, base_url):
-    soup = get_soup(url)
-    #soup = [data.decompose() for data in soup(['span'])]
+def scrape_one_day_trips(soup):
     div_links = soup.find_all('div', {'class':'fVbwn cdAAV cagLQ eZTON'})
     div_names = soup.find_all('div', {'class':'bUshh o csemS'})
     result = list()
@@ -58,9 +58,9 @@ def scrape_one_day_trips(url, base_url):
         name = div_name.text.strip()
         fields = {
                 'trip_name': name,
-                'trip_link': f'{base_url}{link}',
+                'trip_link': f'{BASE_URL}{link}',
                 'status': 'PENDING',
-                'hsh': hashlib.md5(f'{name}{base_url}{link}'.encode()).hexdigest()
+                'hsh': hashlib.md5(f'{name}{BASE_URL}{link}'.encode()).hexdigest()
                 }
         result.append(fields)
         
@@ -68,23 +68,24 @@ def scrape_one_day_trips(url, base_url):
 
 
 
-def get_all_links_names(url, base_url):
+def get_all_links_names(url):
     results = list()
-    print(f'going to first page...: {url}')
-    results.append(scrape_one_day_trips(url ,base_url))
-    next = f'{base_url}{next_page(url)}'
-    while next:
-        print(f'going to next page ...: {next}')
-        results.append(scrape_one_day_trips(next, base_url))
-        next = f'{base_url}{next_page(next)}' if next_page(next) else False
-        
-    all_results = list(itertools.chain.from_iterable(results))
-    return all_results
-
-
-
-def next_page(url):
     soup = get_soup(url)
+    print(f'going to first page...: {url}')
+    results.extend(scrape_one_day_trips(soup))
+    next = f'{BASE_URL}{next_page(soup)}'
+    while next:
+        soup = get_soup(next)
+        print(f'going to next page ...: {next}')
+        results.extend(scrape_one_day_trips(soup))
+        next = f'{BASE_URL}{next_page(soup)}' if next_page(soup) else False
+        
+    return results
+
+
+
+def next_page(soup):
+    
     next_page = soup.find('a', {'class':'dfuux u j z _F ddFHE bVTsJ emPJr', 'data-smoke-attr':'pagination-next-arrow'})
     return next_page['href'] if next_page else False
     
@@ -92,10 +93,9 @@ def next_page(url):
 
 def main():
     url = 'https://www.tripadvisor.com/Attraction_Products-g297628-t11889-zfg11867-Bengaluru_Bangalore_District_Karnataka.html'
-    base_url = 'https://www.tripadvisor.com'
     city_name = 'Bangalore'
     filename = f'ingestion_trip_advisior_{city_name}_things_to_do.csv'
-    results = get_all_links_names(url, base_url)
+    results = get_all_links_names(url)
     dataframe = pandas.DataFrame(results)
     dataframe.to_csv(filename, index=False)
     print(f'Entire Data: \n{results}')
