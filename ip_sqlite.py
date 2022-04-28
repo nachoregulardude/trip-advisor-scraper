@@ -40,14 +40,12 @@ Getting to Scrape crawl link:
 '''
 
 
-
 def get_soup(url):
     headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'}
     session = requests.Session()
     url_resp = session.get(url, headers=headers)
-    
+    logging.info(url_resp.status_code)
     return  BeautifulSoup(url_resp.text, 'lxml')
-
 
 
 def scrape_one_day_trips(soup):
@@ -65,9 +63,12 @@ def scrape_one_day_trips(soup):
                 'hsh': hashlib.md5(f'{name}{BASE_URL}{link}'.encode()).hexdigest()
                 }
         result.append(fields)
-        
     return result
 
+
+def next_page(soup):
+    next_page = soup.find('a', {'class':'dfuux u j z _F ddFHE bVTsJ emPJr', 'data-smoke-attr':'pagination-next-arrow'})
+    return next_page['href'] if next_page else False
 
 
 def get_all_links_names(url):
@@ -81,38 +82,21 @@ def get_all_links_names(url):
         print(f'going to next page ...: {next}')
         results.extend(scrape_one_day_trips(soup))
         next = f'{BASE_URL}{next_page(soup)}' if next_page(soup) else False
-        
     return results
-
-
-
-def next_page(soup):
-    next_page = soup.find('a', {'class':'dfuux u j z _F ddFHE bVTsJ emPJr', 'data-smoke-attr':'pagination-next-arrow'})
-    return next_page['href'] if next_page else False
     
-
 
 def main():
     url = 'https://www.tripadvisor.com/Attraction_Products-g297628-t11889-zfg11867-Bengaluru_Bangalore_District_Karnataka.html'
-    city_name = 'Bangalore'
+    city_name = 'bangalore'
     filename = f'ingestion_trip_advisior_{city_name}_things_to_do.db'
-    connection = sqlite3.connect(filename)
-    # cursor = connection.cursor()
-    # cursor.execute('''
-    #         CREATE TABLE IF NOT EXISTS one_day_things_to_do_trip
-    #         (trip_name text, trip_link text, status text, hsh text PRIMARY KEY)
-    #         ''')
     results = get_all_links_names(url)
+    connection = sqlite3.connect(filename)
     dataframe = pandas.DataFrame(results)
-    # dataframe.to_csv(filename, index=False)
-    # cursor.execute('''
-    #         INSERT OR IGNORE INTO one_day_things_to_do_trip VALUES (?, ?, ?)
-    #         ''')
     dataframe.to_sql(name=filename, con=connection, if_exists='replace', index=False)
     connection.commit()
-    print(f'Entire Data: \n{results}')
     print(f'Got {len(results)} results')
     print(f'Results saved to {filename}')
+
 
 if __name__=='__main__':
     main()
