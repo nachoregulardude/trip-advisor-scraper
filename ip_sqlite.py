@@ -91,8 +91,15 @@ def main():
     filename = f'ingestion_trip_advisior_{city_name}_things_to_do.db'
     results = get_all_links_names(url)
     connection = sqlite3.connect(filename)
+    cursor = connection.cursor()
+    cursor.execute('''
+            CREATE TABLE IF NOT EXISTS one_day_things_to_do_trip
+            (trip_name text, trip_link text, status text, hsh text PRIMARY KEY)
+            ''')
+    connection = sqlite3.connect(filename)
     dataframe = pandas.DataFrame(results)
-    dataframe.to_sql(name=filename, con=connection, if_exists='replace', index=False)
+    table_name = 'one_day_things_to_do_trip'
+    dataframe.to_sql(name=table_name, con=connection, if_exists='replace', index=False)
     connection.commit()
     print(f'Got {len(results)} results')
     print(f'Results saved to {filename}')

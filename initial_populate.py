@@ -54,14 +54,11 @@ def get_data(soup_of_page):
         div_inclusions_exclusions = soup_of_page.find('div', {'class': 'euJLv'})
         inclusions_ul_elements = div_inclusions_exclusions.find('ul', {'class': 'dGZhF'})
         inclusions_list = list()
-        for li in inclusions_ul_elements:
-            inclusions_list.append(li.text)
+        inclusions_list = [li.text for li in inclusions_ul_elements]
         
         exclusions_ul_elements = div_inclusions_exclusions.find_all('ul', {'class': 'dGZhF'})[1]
         exclusion_list = list()
-        for li in exclusions_ul_elements:
-            exclusion_list.append(li.text)
-        
+        exclusion_list = [li.text for li in exclusions_ul_elements]
         
         divs_under_itineary_list = soup_of_page.find('section', {'id': 'tab-data-WebPresentation_AttractionProductItineraryPlaceholder'})
         divs_itineary_list = divs_under_itineary_list.find_all('li')
@@ -72,6 +69,7 @@ def get_data(soup_of_page):
             itineary_list.append(res)
             count += 1
         itineary_list = [e.text for x in itineary_list[1:-1] for e in x][1:-1]
+        
         fields = {
                 'star_rating': star_rating, 
                 'total_reviews_given': total_reviews_given, 
@@ -84,10 +82,25 @@ def get_data(soup_of_page):
                 'itineary_list': itineary_list
                 }
         return fields
+    
     except Exception as e:
         return e
 
 url = 'https://www.tripadvisor.com/AttractionProductReview-g297628-d11486836-Private_Full_Day_Bangalore_City_Tour-Bengaluru_Bangalore_District_Karnataka.html'
-soup_of_page = get_soup(url)
-data = get_data(soup_of_page)
-print(data)
+# soup_of_page = get_soup(url)
+# data = get_data(soup_of_page)
+city_name = 'bangalore'
+filename = f'ingestion_trip_advisior_{city_name}_things_to_do.db'
+conn = sqlite3.connect(filename)
+cur = conn.cursor()
+cur.execute("""
+        SELECT * FROM one_day_things_to_do_trip
+        """)
+rows = cur.fetchall()
+print(rows)
+
+
+
+    
+    
+
