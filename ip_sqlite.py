@@ -96,7 +96,6 @@ def main():
             CREATE TABLE IF NOT EXISTS one_day_things_to_do_trip
             (trip_name text, trip_link text, status text, hsh text PRIMARY KEY)
             ''')
-    connection = sqlite3.connect(filename)
     dataframe = pandas.DataFrame(results)
     table_name = 'one_day_things_to_do_trip'
     dataframe.to_sql(name=table_name, con=connection, if_exists='replace', index=False)

@@ -1,3 +1,4 @@
-ingestion_trip_advisior_Bangalore_things_to_do.csv
 ingestion_trip_advisior_Bangalore_things_to_do.db
+ingestion_trip_advisior_Bangalore_things_to_do.db.bkp
+__pycache__
 ip_sqlite.log
