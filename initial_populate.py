@@ -1,12 +1,13 @@
 import sqlite3
 import logging
-import re
 
 
+from ip_sqlite import get_soup
 import requests
 from bs4 import BeautifulSoup
 
-from ip_sqlite import get_soup
+logging.basicConfig(filename='ip_sqlite.log', level=logging.DEBUG, format='%(asctime)s - %(message)s', datefmt='%d/%b/%Y %H:%M:%S')
+
 
 """
 Task Part 2:( Replicate teal's downloader scraping)
@@ -29,10 +30,17 @@ Task Part 2:( Replicate teal's downloader scraping)
             learn to read from sqlite table and update values
 """
 
+
+def get_soup(url):
+    headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'}
+    session = requests.Session()
+    url_resp = session.get(url, headers=headers)
+    logging.info(url_resp.status_code)
+    return  BeautifulSoup(url_resp.text, 'lxml')
+
+
 def get_data(soup_of_page):
     try:
-        star_rating_and_total_reviews = soup_of_page.find('div', {'class':'RTVWf o W f u w eeCyE'})
-        
         trip_by = soup_of_page.find('a', {'class': 'bfQwA _G B- _S _T c G_ P0 ddFHE cnvzr bTBvn'})
         trip_by = trip_by.text.replace('By', '').strip()
         
@@ -41,15 +49,14 @@ def get_data(soup_of_page):
         
         star_rating_and_total_reviews = soup_of_page.find('div', {'class':'RTVWf o W f u w eeCyE'})
         star_rating_and_total_reviews = star_rating_and_total_reviews['aria-label'].split(' ')
-        star_rating = star_rating_and_total_reviews[0]
-        total_reviews_given = star_rating_and_total_reviews[4]
+        star_rating = float(star_rating_and_total_reviews[0])
+        total_reviews_given = int(star_rating_and_total_reviews[4])
         
         duration = soup_of_page.find('div', {'class': 'fxJux'}).text.split(':')[1]
         
         divs_under_content = soup_of_page.find('div', {'data-automation': 'WebPresentation_PoiAboutWeb'})
-        divs_available_languages = divs_under_content.find_all('div', {'class': 'WlYyy cPsXC cspKb dTqpp'})
-        div_available_languages = [x for x in divs_available_languages if 'available languages' in x.text.lower()][0] 
-        available_languages = div_available_languages.find()
+        divs_available_languages = divs_under_content.find_all('div', {'class': 'fbrwK'})
+        available_languages = [f'{x.text} ' for x in divs_available_languages if 'available languages' in x.text.lower()][0].replace('Available languages', '').strip()
         
         div_inclusions_exclusions = soup_of_page.find('div', {'class': 'euJLv'})
         inclusions_ul_elements = div_inclusions_exclusions.find('ul', {'class': 'dGZhF'})
@@ -60,15 +67,12 @@ def get_data(soup_of_page):
         exclusion_list = list()
         exclusion_list = [li.text for li in exclusions_ul_elements]
         
-        divs_under_itineary_list = soup_of_page.find('section', {'id': 'tab-data-WebPresentation_AttractionProductItineraryPlaceholder'})
-        divs_itineary_list = divs_under_itineary_list.find_all('li')
+        li_of_itineary_list = soup_of_page.select('div[data-automation*=itineraryItem_]')
         itineary_list = list()
-        count = 0
-        for ele in divs_itineary_list:
-            res = ele.find_all('span', {'class': 'crfhC'})
-            itineary_list.append(res)
-            count += 1
-        itineary_list = [e.text for x in itineary_list[1:-1] for e in x][1:-1]
+        for ele in li_of_itineary_list:
+            span = ele.find('span', {'class':'bkpgm'})
+            span.decompose()
+            itineary_list.append(ele.text.strip())
         
         fields = {
                 'star_rating': star_rating, 
@@ -86,19 +90,34 @@ def get_data(soup_of_page):
     except Exception as e:
         return e
 
-url = 'https://www.tripadvisor.com/AttractionProductReview-g297628-d11486836-Private_Full_Day_Bangalore_City_Tour-Bengaluru_Bangalore_District_Karnataka.html'
-# soup_of_page = get_soup(url)
-# data = get_data(soup_of_page)
+url = 'https://www.tripadvisor.com/AttractionProductReview-g297628-d11484011-Full_Day_Nandi_Hills_Countryside_Tour_by_Bike-Bengaluru_Bangalore_District_Karnata.html'
 city_name = 'bangalore'
 filename = f'ingestion_trip_advisior_{city_name}_things_to_do.db'
 conn = sqlite3.connect(filename)
 cur = conn.cursor()
 cur.execute("""
-        SELECT * FROM one_day_things_to_do_trip
+        SELECT trip_link FROM one_day_things_to_do_trip WHERE status = PENDING
         """)
 rows = cur.fetchall()
+results = list()
+rows = [link for tuple in rows for link in tuple]
 print(rows)
-
+quit()
+for link in rows[0:3]:
+    print(link)
+    soup_of_page = get_soup(link)
+    data = get_data(soup_of_page)
+    if (isinstance(data, dict)):
+        results.append(data)
+        cur.execute("""
+                UPDATE one_day_things_to_do_trip SET status = COMPLETED
+                """)
+    else:
+        cur.execute("""
+                UPDATE one_day_things_to_do_trip SET status = ?
+                """, (data))
+        
+print(results)
 
 
     
