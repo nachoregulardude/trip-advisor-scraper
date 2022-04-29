@@ -1,4 +1,6 @@
 ingestion_trip_advisior_Bangalore_things_to_do.db
+ingestion_ta_bangalore_1_day_things_to_do_meta_data.json
 ingestion_trip_advisior_Bangalore_things_to_do.db.bkp
 __pycache__
 ip_sqlite.log
+initial_populate.log
