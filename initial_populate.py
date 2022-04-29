@@ -4,7 +4,6 @@ import sqlite3
 import json
 import logging
 
-from ip_sqlite import get_soup
 from requests import Session
 from bs4 import BeautifulSoup
 
@@ -130,7 +129,7 @@ def main():
     with open(json_name, 'a') as a:
         json.dump(results, a)
     conn.commit()
-    print(f"{db_name} has been updated.\n{json_name} has been updated.\n{len(results)} links scraped.")
+    print(f"The {db_name} database has been updated.\nThe {json_name} file has been updated.\n{len(results)} links have been scraped.")
 
 
 if __name__=="__main__":
