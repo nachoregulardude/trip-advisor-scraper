@@ -108,7 +108,7 @@ def scrape_data(soup_of_page):
 
 def main():
     city_name = 'bangalore'
-    db_name = f'ngestion_trip_advisior_{city_name}_things_to_do.db'
+    db_name = f'ingestion_trip_advisor_{city_name}_things_to_do.db'
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
     try:
@@ -119,7 +119,7 @@ def main():
     except Exception as e:
         print(e)
     results = {}
-
+    
     for values in rows:
         link = values[1]
         hsh = values[0]
@@ -128,11 +128,12 @@ def main():
         data = scrape_data(soup_of_page)
         try:
             result = {hsh: data}
-            results.union(result)
+            results.update(result)
             cur.execute("""
                     UPDATE one_day_things_to_do_trip SET status = 'COMPLETED' WHERE hsh = ?
                     """, (hsh,))
         except Exception as e:
+            print(e)
             cur.execute("""
                     UPDATE one_day_things_to_do_trip SET status = ? WHERE hsh = ?
                     """, (e, hsh))

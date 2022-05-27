@@ -89,7 +89,7 @@ def get_all_links_names(url):
 def main():
     url = 'https://www.tripadvisor.com/Attraction_Products-g297628-t11889-zfg11867-Bengaluru_Bangalore_District_Karnataka.html'
     city_name = 'bangalore'
-    filename = f'ingestion_trip_advisior_{city_name}_things_to_do.db'
+    filename = f'ingestion_trip_advisor_{city_name}_things_to_do.db'
     results = get_all_links_names(url)
     connection = sqlite3.connect(filename)
     cursor = connection.cursor()
