@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import hashlib
 import logging
 import sqlite3
@@ -51,7 +52,7 @@ def get_soup(url):
 def scrape_one_day_trips(soup):
     div_links = soup.find_all('div', {'class':'fVbwn cdAAV cagLQ eZTON'})
     div_names = soup.find_all('div', {'class':'bUshh o csemS'})
-    result = list()
+    result = []
     for div_name, div_link in zip(div_names, div_links):
         link = div_link.find('a')['href']
         div_name.span.decompose()
@@ -72,16 +73,16 @@ def next_page(soup):
 
 
 def get_all_links_names(url):
-    results = list()
+    results = []
     soup = get_soup(url)
     print(f'going to first page...: {url}')
     results.extend(scrape_one_day_trips(soup))
-    next = f'{BASE_URL}{next_page(soup)}'
-    while next:
-        soup = get_soup(next)
-        print(f'going to next page ...: {next}')
+    next_page_url = f'{BASE_URL}{next_page(soup)}'
+    while next_page_url:
+        soup = get_soup(next_page_url)
+        print(f'going to next page ...: {next_page_url}')
         results.extend(scrape_one_day_trips(soup))
-        next = f'{BASE_URL}{next_page(soup)}' if next_page(soup) else False
+        next_page_url = f'{BASE_URL}{next_page(soup)}' if next_page(soup) else False
     return results
     
 
@@ -106,5 +107,3 @@ def main():
 
 if __name__=='__main__':
     main()
-
-
